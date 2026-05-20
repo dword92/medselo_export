@@ -940,12 +940,12 @@
       <div class="modal-subtitle">Выберите нужный вид помощи. Мы пришлём как можно быстрее.</div>
 
       <div class="emergency-options">
-        <div class="emerg-option" onclick="selectEmerg(this)">
+        <div class="emerg-option" id="emerg-bus" onclick="selectEmerg(this, 'bus')">
           <div class="opt-icon">🚑</div>
           <div class="opt-name">Реанимационный автобус</div>
           <div class="opt-desc">Тяжёлое состояние, но пациент в сознании</div>
         </div>
-        <div class="emerg-option" onclick="selectEmerg(this)">
+        <div class="emerg-option" id="emerg-heli" onclick="selectEmerg(this, 'helicopter')">
           <div class="opt-icon">🚁</div>
           <div class="opt-name">Медицинский вертолёт</div>
           <div class="opt-desc">Критическая ситуация, труднодоступное место</div>
@@ -954,25 +954,22 @@
 
       <div class="form-group">
         <label class="form-label">Ваше точное местоположение</label>
-        <input class="form-input" type="text" placeholder="Село, улица, ориентир">
+        <input id="emerg-address" class="form-input" type="text" placeholder="Село, улица, ориентир">
       </div>
       <div class="form-group">
-        <label class="form-label">Ваш номер телефона</label>
-        <input class="form-input" type="tel" placeholder="+7 (___) ___-__-__">
+        <label class="form-label">Кратко опишите ситуацию (необязательно)</label>
+        <textarea id="emerg-desc" class="form-textarea" placeholder="Что случилось? Сколько пострадавших?"></textarea>
       </div>
-      <div class="form-group">
-        <label class="form-label">Кратко опишите ситуацию</label>
-        <textarea class="form-textarea" placeholder="Что случилось? Сколько пострадавших?"></textarea>
-      </div>
+      <div id="emerg-error" style="color:var(--red);font-size:13px;font-weight:700;margin-bottom:8px;display:none;"></div>
 
-      <button class="btn-primary btn-red" onclick="showSuccess('emergency')">🚨 ВЫЗВАТЬ СЕЙЧАС</button>
+      <button class="btn-primary btn-red" id="btn-emerg" onclick="submitEmergency()">🚨 ВЫЗВАТЬ СЕЙЧАС</button>
       <button class="btn-close" onclick="closeModal('emergency')">Отмена</button>
     </div>
 
     <div class="success-screen" id="emergency-success">
       <div class="success-icon">🚁</div>
       <div class="success-title" style="color: var(--red);">Вызов принят!</div>
-      <div class="success-msg">Бригада экстренной помощи уже выехала.<br>Не отключайте телефон — диспетчер может позвонить.<br><br><strong>Оставайтесь рядом с пострадавшим.</strong></div>
+      <div class="success-msg">Диспетчер получил ваш вызов.<br>Не отключайте телефон — вам перезвонят.<br><br><strong>Оставайтесь рядом с пострадавшим.</strong></div>
       <button class="btn-primary btn-red" onclick="closeModal('emergency')">Понятно</button>
     </div>
   </div>
@@ -989,20 +986,12 @@
       <div class="modal-subtitle">Заполните данные — диспетчер свяжется с вами и подтвердит вылет</div>
 
       <div class="form-group">
-        <label class="form-label">Ваше имя и фамилия</label>
-        <input class="form-input" type="text" placeholder="Например: Серик Жаксыбеков">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Ваш номер телефона</label>
-        <input class="form-input" type="tel" placeholder="+7 (___) ___-__-__">
-      </div>
-      <div class="form-group">
         <label class="form-label">Точное местоположение</label>
-        <input class="form-input" type="text" placeholder="Село, ближайший ориентир, координаты">
+        <input id="heli-address" class="form-input" type="text" placeholder="Село, ближайший ориентир, координаты">
       </div>
       <div class="form-group">
         <label class="form-label">Причина вызова</label>
-        <select class="form-select">
+        <select id="heli-reason" class="form-select">
           <option>Тяжёлая травма</option>
           <option>Острый сердечный приступ</option>
           <option>Роды в труднодоступном месте</option>
@@ -1011,11 +1000,12 @@
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Дополнительные сведения</label>
-        <textarea class="form-textarea" placeholder="Состояние пациента, есть ли место для посадки..."></textarea>
+        <label class="form-label">Дополнительные сведения (необязательно)</label>
+        <textarea id="heli-desc" class="form-textarea" placeholder="Состояние пациента, есть ли место для посадки..."></textarea>
       </div>
+      <div id="heli-error" style="color:var(--red);font-size:13px;font-weight:700;margin-bottom:8px;display:none;"></div>
 
-      <button class="btn-primary" style="background:var(--orange);" onclick="showSuccess('helicopter')">🚁 Вызвать вертолёт</button>
+      <button class="btn-primary" style="background:var(--orange);" id="btn-heli" onclick="submitHelicopter()">🚁 Вызвать вертолёт</button>
       <button class="btn-close" onclick="closeModal('helicopter')">Отмена</button>
     </div>
 
@@ -1209,6 +1199,19 @@
   function openModal(type) {
     document.getElementById('modal-' + type).classList.add('active');
     document.body.style.overflow = 'hidden';
+    // Предзаполняем адрес из профиля при открытии вертолёта или экстренного
+    if (currentUser) {
+      const parts = [currentUser.village, currentUser.region].filter(Boolean);
+      const autoAddr = parts.join(', ');
+      if (type === 'helicopter') {
+        const f = document.getElementById('heli-address');
+        if (f && !f.value && autoAddr) f.value = autoAddr;
+      }
+      if (type === 'emergency') {
+        const f = document.getElementById('emerg-address');
+        if (f && !f.value && autoAddr) f.value = autoAddr;
+      }
+    }
   }
 
   function closeModal(type) {
@@ -1227,10 +1230,7 @@
     if (success) success.classList.add('active');
   }
 
-  function selectEmerg(el) {
-    document.querySelectorAll('.emerg-option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-  }
+  // selectEmerg переопределён выше вместе с логикой API
 
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function(e) {
@@ -1240,6 +1240,124 @@
       }
     });
   });
+
+
+  // ── ЭКСТРЕННЫЙ ВЫЗОВ И ВЕРТОЛЁТ ───────────────────────────────────────────
+
+  let selectedEmergType = null;
+
+  function selectEmerg(el, type) {
+    document.querySelectorAll('.emerg-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedEmergType = type;
+    document.getElementById('emerg-error').style.display = 'none';
+    // Предзаполняем адрес из профиля если есть
+    if (currentUser && !document.getElementById('emerg-address').value) {
+      const parts = [currentUser.village, currentUser.region].filter(Boolean);
+      if (parts.length) document.getElementById('emerg-address').value = parts.join(', ');
+    }
+  }
+
+  async function submitEmergency() {
+    if (!currentUser) {
+      openAuthTab('login');
+      closeModal('emergency');
+      return;
+    }
+    if (!selectedEmergType) {
+      const err = document.getElementById('emerg-error');
+      err.textContent = '⚠️ Выберите тип помощи';
+      err.style.display = 'block';
+      return;
+    }
+    const address = document.getElementById('emerg-address').value.trim();
+    if (!address) {
+      const err = document.getElementById('emerg-error');
+      err.textContent = '⚠️ Укажите местоположение';
+      err.style.display = 'block';
+      return;
+    }
+    const desc = document.getElementById('emerg-desc').value.trim();
+    await sendEmergencyCall('emergency', selectedEmergType, address, desc || null);
+  }
+
+  async function submitHelicopter() {
+    if (!currentUser) {
+      openAuthTab('login');
+      closeModal('helicopter');
+      return;
+    }
+    const address = document.getElementById('heli-address').value.trim();
+    if (!address) {
+      const err = document.getElementById('heli-error');
+      err.textContent = '⚠️ Укажите местоположение';
+      err.style.display = 'block';
+      return;
+    }
+    const reason = document.getElementById('heli-reason').value;
+    const extra  = document.getElementById('heli-desc').value.trim();
+    const desc   = extra ? reason + '. ' + extra : reason;
+    await sendEmergencyCall('helicopter', 'helicopter', address, desc);
+  }
+
+  async function sendEmergencyCall(modalType, type, address, description) {
+    const btnId = modalType === 'emergency' ? 'btn-emerg' : 'btn-heli';
+    const errId = modalType === 'emergency' ? 'emerg-error' : 'heli-error';
+    const btn = document.getElementById(btnId);
+    const origText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+
+    try {
+      const body = { type, address };
+      if (description) body.description = description;
+
+      const r = await fetch(API + '/api/v1/emergency', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + getToken(),
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (r.status === 401) {
+        openAuthTab('login');
+        closeModal(modalType);
+        return;
+      }
+
+      const data = await r.json();
+      if (!r.ok) {
+        const err = document.getElementById(errId);
+        err.textContent = '⚠️ ' + (data.detail || 'Ошибка отправки вызова');
+        err.style.display = 'block';
+        return;
+      }
+
+      // Успех — показываем экран подтверждения
+      showSuccess(modalType);
+      // Сбрасываем форму
+      if (modalType === 'emergency') {
+        selectedEmergType = null;
+        document.querySelectorAll('.emerg-option').forEach(o => o.classList.remove('selected'));
+        document.getElementById('emerg-address').value = '';
+        document.getElementById('emerg-desc').value = '';
+      } else {
+        document.getElementById('heli-address').value = '';
+        document.getElementById('heli-desc').value = '';
+      }
+    } catch(_) {
+      const err = document.getElementById(errId);
+      err.textContent = '⚠️ Нет связи с сервером';
+      err.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = origText;
+    }
+  }
+
+
 
   // ── Инициализация ─────────────────────────────────────────────────────────
   loadMe();
