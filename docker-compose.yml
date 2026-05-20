@@ -1,0 +1,15 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - db_data:/data
+    environment:
+      - DATABASE_URL=sqlite:////data/medselo.db
+      - SECRET_KEY=change_me_before_showing_to_friend
+      - DEBUG=true
+    restart: unless-stopped
+
+volumes:
+  db_data:

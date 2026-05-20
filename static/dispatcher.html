@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medicopter — Диспетчер</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --surface2:  #1c2333;
+    --border:    #30363d;
+    --blue:      #58a6ff;
+    --blue-dim:  #1f3a5f;
+    --green:     #3fb950;
+    --green-dim: #1a3a24;
+    --orange:    #f0883e;
+    --orange-dim:#3d2510;
+    --red:       #f85149;
+    --red-dim:   #3d1a1a;
+    --yellow:    #d29922;
+    --yellow-dim:#3d2e00;
+    --purple:    #bc8cff;
+    --text:      #e6edf3;
+    --text-muted:#8b949e;
+    --radius:    12px;
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'Nunito', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .logo-badge {
+    background: var(--blue-dim);
+    color: var(--blue);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green);
+    font-family: var(--mono);
+  }
+
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse-green 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(63,185,80,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(63,185,80,0); }
+  }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  .user-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--blue-dim);
+    border: 2px solid var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--blue);
+  }
+
+  .btn-logout-top {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .btn-logout-top:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── LOGIN SCREEN ── */
+  .login-screen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .login-box h2 {
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .login-box p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    font-weight: 600;
+  }
+
+  .field { margin-bottom: 16px; }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 7px;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-family: var(--mono);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input:focus { border-color: var(--blue); }
+
+  .login-error {
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--red);
+    margin-bottom: 16px;
+    display: none;
+  }
+  .login-error.show { display: block; }
+
+  .role-warning {
+    background: var(--yellow-dim);
+    border: 1px solid var(--yellow);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--yellow);
+    margin-bottom: 16px;
+    display: none;
+  }
+  .role-warning.show { display: block; }
+
+  .btn-primary-dark {
+    width: 100%;
+    padding: 12px;
+    background: var(--blue);
+    color: #0d1117;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 900;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-primary-dark:hover { opacity: 0.85; }
+  .btn-primary-dark:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+  }
+  .main.visible { display: flex; }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .stat-num {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .stat-info strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .stat-info span {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .stat-divider {
+    width: 1px;
+    height: 36px;
+    background: var(--border);
+  }
+
+  .stats-bar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-refresh {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-refresh:hover { border-color: var(--blue); color: var(--blue); }
+  .btn-refresh.spinning svg { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .filter-tabs {
+    display: flex;
+    gap: 4px;
+  }
+
+  .filter-tab {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+    background: none;
+    color: var(--text-muted);
+  }
+  .filter-tab:hover { color: var(--text); }
+  .filter-tab.active {
+    background: var(--surface2);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  /* ── CALLS GRID ── */
+  .calls-container {
+    padding: 20px 24px;
+    flex: 1;
+  }
+
+  .calls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+
+  /* ── CALL CARD ── */
+  .call-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+    animation: cardIn 0.3s ease;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .call-card:hover { transform: translateY(-2px); }
+
+  .call-card.status-new      { border-color: var(--red);    }
+  .call-card.status-accepted { border-color: var(--yellow); }
+  .call-card.status-dispatched { border-color: var(--blue); }
+  .call-card.status-arrived  { border-color: var(--green);  }
+  .call-card.status-closed   { border-color: var(--border); opacity: 0.6; }
+
+  .card-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .call-type-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .type-helicopter { background: var(--orange-dim); }
+  .type-bus        { background: var(--blue-dim); }
+
+  .call-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .call-type-label {
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 800;
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+  }
+  .badge-new        { background: var(--red-dim);    color: var(--red);    }
+  .badge-accepted   { background: var(--yellow-dim); color: var(--yellow); }
+  .badge-dispatched { background: var(--blue-dim);   color: var(--blue);   }
+  .badge-arrived    { background: var(--green-dim);  color: var(--green);  }
+  .badge-closed     { background: #1c2333;            color: var(--text-muted); }
+
+  .card-body {
+    padding: 14px 16px;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 9px;
+    font-size: 13px;
+  }
+
+  .info-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+  .info-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+
+  .info-value {
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .info-value.mono { font-family: var(--mono); font-size: 12px; }
+
+  .description-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 2px;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .time-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .time-ago {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .time-ago.urgent { color: var(--red); font-weight: 700; }
+
+  /* ── ACTION BUTTONS ── */
+  .card-actions {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-action {
+    flex: 1;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 800;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .btn-accept   { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow); }
+  .btn-dispatch { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue);   }
+  .btn-arrive   { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green);  }
+  .btn-close-call { background: #1c2333;          color: var(--text-muted); border: 1px solid var(--border); }
+
+  .btn-action:hover { filter: brightness(1.2); }
+  .btn-action:disabled { opacity: 0.35; cursor: not-allowed; filter: none; }
+
+  .btn-note {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  .btn-note:hover { border-color: var(--purple); color: var(--purple); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state .e-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; color: var(--text); }
+  .empty-state p  { font-size: 14px; font-weight: 600; }
+
+  /* ── NOTE MODAL ── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .overlay.show { display: flex; }
+
+  .note-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 440px;
+    animation: modalIn 0.25s ease;
+  }
+
+  @keyframes modalIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  .note-modal h3 { font-size: 18px; font-weight: 900; margin-bottom: 6px; }
+  .note-modal p  { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 20px; }
+
+  .note-modal textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-family: var(--sans);
+    color: var(--text);
+    resize: vertical;
+    min-height: 90px;
+    outline: none;
+    transition: border-color 0.15s;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+  .note-modal textarea:focus { border-color: var(--blue); }
+
+  .modal-btns { display: flex; gap: 10px; }
+
+  .btn-modal-ok {
+    flex: 1;
+    padding: 11px;
+    background: var(--blue);
+    color: #0d1117;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 900;
+    font-family: var(--sans);
+    cursor: pointer;
+  }
+  .btn-modal-cancel {
+    padding: 11px 20px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--sans);
+    cursor: pointer;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    z-index: 300;
+    transform: translateX(120%);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    max-width: 320px;
+  }
+  .toast.show { transform: translateX(0); }
+  .toast.ok  { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); }
+  .toast.err { background: var(--red-dim);   border: 1px solid var(--red);   color: var(--red);   }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13,17,23,0.8);
+    z-index: 400;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--blue);
+    gap: 12px;
+  }
+  .loading-overlay.show { display: flex; }
+
+  .spinner-lg {
+    width: 20px; height: 20px;
+    border: 3px solid var(--blue-dim);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/" class="logo">🏥 Medicopter <span class="logo-badge">DISPATCHER</span></a>
+  </div>
+  <div class="topbar-right">
+    <div class="live-indicator" id="live-label" style="display:none">
+      <div class="live-dot"></div> LIVE
+    </div>
+    <div class="topbar-user" id="topbar-user" style="display:none">
+      <div class="user-avatar" id="user-initials">?</div>
+      <span id="user-name-top"></span>
+    </div>
+    <button class="btn-logout-top" id="btn-logout" style="display:none" onclick="logout()">Выйти</button>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <h2>🛡️ Панель диспетчера</h2>
+    <p>Войдите с аккаунтом диспетчера или администратора</p>
+
+    <div class="login-error" id="login-err"></div>
+    <div class="role-warning" id="role-warn"></div>
+
+    <div class="field">
+      <label>Номер телефона</label>
+      <input id="l-phone" type="tel" placeholder="+77001234567" oninput="clearLoginErr()">
+    </div>
+    <div class="field">
+      <label>Пароль</label>
+      <input id="l-pass" type="password" placeholder="••••••••"
+        oninput="clearLoginErr()" onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+
+    <button class="btn-primary-dark" id="btn-login" onclick="doLogin()">Войти в панель</button>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div class="main" id="main">
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-num" id="s-new" style="color:var(--red)">0</div>
+      <div class="stat-info">
+        <strong style="color:var(--red)">Новые</strong>
+        <span>Ожидают ответа</span>
+      </div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-num" id="s-accepted" style="color:var(--yellow)">0</div>
+      <div class="stat-info">
+        <strong style="color:var(--yellow)">Приняты</strong>
+        <span>В обработке</span>
+      </div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-num" id="s-dispatched" style="color:var(--blue)">0</div>
+      <div class="stat-info">
+        <strong style="color:var(--blue)">В пути</strong>
+        <span>Едут / летят</span>
+      </div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-num" id="s-arrived" style="color:var(--green)">0</div>
+      <div class="stat-info">
+        <strong style="color:var(--green)">На месте</strong>
+        <span>Прибыли</span>
+      </div>
+    </div>
+
+    <div class="stats-bar-right">
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="active" onclick="setFilter('active',this)">Активные</button>
+        <button class="filter-tab" data-filter="all" onclick="setFilter('all',this)">Все</button>
+        <button class="filter-tab" data-filter="closed" onclick="setFilter('closed',this)">Закрытые</button>
+      </div>
+      <button class="btn-refresh" id="btn-refresh" onclick="loadCalls()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+          <path d="M8 16H3v5"/>
+        </svg>
+        Обновить
+      </button>
+    </div>
+  </div>
+
+  <!-- CALLS -->
+  <div class="calls-container">
+    <div class="calls-grid" id="calls-grid">
+      <div class="empty-state">
+        <div class="e-icon">📡</div>
+        <h3>Загрузка...</h3>
+        <p>Получаем данные с сервера</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- NOTE MODAL -->
+<div class="overlay" id="note-overlay" onclick="if(event.target===this) closeNote()">
+  <div class="note-modal">
+    <h3>💬 Заметка диспетчера</h3>
+    <p>Добавьте комментарий к вызову (необязательно)</p>
+    <textarea id="note-input" placeholder="Например: вертолёт МВД, борт №12, вылет через 20 мин..."></textarea>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeNote()">Отмена</button>
+      <button class="btn-modal-ok" onclick="confirmAction()">Подтвердить</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner-lg"></div>
+  Выполняем действие...
+</div>
+
+<script>
+const API = '';
+let token = null;
+let currentUser = null;
+let allCalls = [];
+let currentFilter = 'active';
+let pendingAction = null; // { callId, newStatus }
+
+const STATUS_LABELS = {
+  new: 'НОВЫЙ', accepted: 'ПРИНЯТ',
+  dispatched: 'В ПУТИ', arrived: 'НА МЕСТЕ', closed: 'ЗАКРЫТ'
+};
+
+const NEXT_STATUS = {
+  new: 'accepted', accepted: 'dispatched',
+  dispatched: 'arrived', arrived: 'closed'
+};
+
+const NEXT_BTN = {
+  new:        { cls: 'btn-accept',   label: '✅ Принять вызов' },
+  accepted:   { cls: 'btn-dispatch', label: '🚀 Отправить помощь' },
+  dispatched: { cls: 'btn-arrive',   label: '📍 Прибыли на место' },
+  arrived:    { cls: 'btn-close-call', label: '✔ Закрыть вызов' },
+};
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+
+function clearLoginErr() {
+  document.getElementById('login-err').classList.remove('show');
+  document.getElementById('role-warn').classList.remove('show');
+}
+
+async function doLogin() {
+  const phone = document.getElementById('l-phone').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  if (!phone || !pass) { showLoginErr('Введите телефон и пароль'); return; }
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.textContent = 'Вход...';
+
+  try {
+    const r = await fetch(API + '/api/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, password: pass })
+    });
+    const data = await r.json();
+    if (!r.ok) { showLoginErr(data.detail || 'Неверный логин или пароль'); return; }
+
+    // Получаем профиль и проверяем роль
+    const me = await fetch(API + '/api/v1/users/me', {
+      headers: { 'Authorization': 'Bearer ' + data.access_token }
+    });
+    const user = await me.json();
+
+    if (!['dispatcher', 'admin'].includes(user.role)) {
+      showRoleWarn(`Ваша роль: "${user.role}". Панель диспетчера доступна только для dispatcher и admin.`);
+      return;
+    }
+
+    token = data.access_token;
+    localStorage.setItem('disp_token', token);
+    currentUser = user;
+    enterDashboard();
+  } catch(_) {
+    showLoginErr('Нет связи с сервером. Убедитесь что бэкенд запущен.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Войти в панель';
+  }
+}
+
+function showLoginErr(msg) {
+  const el = document.getElementById('login-err');
+  el.textContent = '⚠️ ' + msg;
+  el.classList.add('show');
+}
+
+function showRoleWarn(msg) {
+  const el = document.getElementById('role-warn');
+  el.textContent = '🔒 ' + msg;
+  el.classList.add('show');
+}
+
+function logout() {
+  token = null; currentUser = null; allCalls = [];
+  localStorage.removeItem('disp_token');
+  document.getElementById('main').classList.remove('visible');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('live-label').style.display = 'none';
+  document.getElementById('topbar-user').style.display = 'none';
+  document.getElementById('btn-logout').style.display = 'none';
+  stopAutoRefresh();
+}
+
+function enterDashboard() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main').classList.add('visible');
+  document.getElementById('live-label').style.display = 'flex';
+  document.getElementById('btn-logout').style.display = 'block';
+
+  const initials = currentUser.full_name.trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('user-initials').textContent = initials;
+  document.getElementById('user-name-top').textContent = currentUser.full_name.split(' ')[0];
+  document.getElementById('topbar-user').style.display = 'flex';
+
+  loadCalls();
+  startAutoRefresh();
+}
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+async function loadCalls() {
+  const btn = document.getElementById('btn-refresh');
+  btn.classList.add('spinning');
+  try {
+    const r = await fetch(API + '/api/v1/emergency', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (r.status === 401) { logout(); return; }
+    allCalls = await r.json();
+    renderCalls();
+    updateStats();
+  } catch(_) {
+    showToast('Ошибка загрузки данных', 'err');
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+let refreshInterval = null;
+function startAutoRefresh() { refreshInterval = setInterval(loadCalls, 15000); }
+function stopAutoRefresh()  { clearInterval(refreshInterval); }
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderCalls();
+}
+
+function getFiltered() {
+  if (currentFilter === 'active')
+    return allCalls.filter(c => c.status !== 'closed');
+  if (currentFilter === 'closed')
+    return allCalls.filter(c => c.status === 'closed');
+  return allCalls;
+}
+
+function updateStats() {
+  ['new','accepted','dispatched','arrived'].forEach(s => {
+    document.getElementById('s-' + s).textContent =
+      allCalls.filter(c => c.status === s).length;
+  });
+}
+
+function timeAgo(isoStr) {
+  const secs = Math.floor((Date.now() - new Date(isoStr)) / 1000);
+  if (secs < 60)  return secs + ' сек. назад';
+  if (secs < 3600) return Math.floor(secs/60) + ' мин. назад';
+  return Math.floor(secs/3600) + ' ч. назад';
+}
+
+function isUrgent(isoStr) {
+  return (Date.now() - new Date(isoStr)) / 1000 > 300; // > 5 минут
+}
+
+function renderCalls() {
+  const grid = document.getElementById('calls-grid');
+  const calls = getFiltered();
+
+  if (!calls.length) {
+    const labels = { active: 'Активных вызовов нет', closed: 'Закрытых вызовов нет', all: 'Вызовов пока нет' };
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="e-icon">${currentFilter === 'active' ? '✅' : '📋'}</div>
+        <h3>${labels[currentFilter]}</h3>
+        <p>Данные обновляются каждые 15 секунд</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = calls.map(c => {
+    const typeIcon  = c.type === 'helicopter' ? '🚁' : '🚌';
+    const typeLabel = c.type === 'helicopter' ? 'Вертолёт' : 'Автобус';
+    const typeCls   = c.type === 'helicopter' ? 'type-helicopter' : 'type-bus';
+    const urgent    = c.status === 'new' && isUrgent(c.created_at);
+    const nextSt    = NEXT_STATUS[c.status];
+    const nextBtn   = NEXT_BTN[c.status];
+
+    const actionBtn = nextBtn ? `
+      <button class="btn-action ${nextBtn.cls}" onclick="startAction(${c.id}, '${nextSt}')">
+        ${nextBtn.label}
+      </button>` : '';
+
+    const dispNote = c.dispatcher_note ? `
+      <div class="info-row" style="margin-top:4px">
+        <span class="info-icon">💬</span>
+        <div><div class="info-label">Заметка диспетчера</div>
+        <div class="description-box">${c.dispatcher_note}</div></div>
+      </div>` : '';
+
+    return `
+    <div class="call-card status-${c.status}" id="card-${c.id}">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="call-type-icon ${typeCls}">${typeIcon}</div>
+          <div>
+            <div class="call-id">#${c.id} · ${new Date(c.created_at).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}</div>
+            <div class="call-type-label">${typeLabel}</div>
+          </div>
+        </div>
+        <span class="status-badge badge-${c.status}">${STATUS_LABELS[c.status]}</span>
+      </div>
+
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-icon">👤</span>
+          <div>
+            <div class="info-label">Пациент</div>
+            <div class="info-value">${c.user_name}</div>
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-icon">📞</span>
+          <div>
+            <div class="info-label">Телефон</div>
+            <div class="info-value mono">${c.user_phone}</div>
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-icon">📍</span>
+          <div>
+            <div class="info-label">Адрес</div>
+            <div class="info-value">${c.address}</div>
+          </div>
+        </div>
+        ${c.description ? `
+        <div class="info-row">
+          <span class="info-icon">📋</span>
+          <div>
+            <div class="info-label">Описание</div>
+            <div class="description-box">${c.description}</div>
+          </div>
+        </div>` : ''}
+        ${dispNote}
+
+        <div class="time-row">
+          <span class="time-ago ${urgent ? 'urgent' : ''}" data-ts="${c.created_at}">
+            ${urgent ? '⚠️ ' : ''}${timeAgo(c.created_at)}
+          </span>
+          ${c.user_village ? `<span style="font-size:11px;color:var(--text-muted);font-weight:700">📌 ${c.user_village}${c.user_region ? ', ' + c.user_region : ''}</span>` : ''}
+        </div>
+      </div>
+
+      ${c.status !== 'closed' ? `
+      <div class="card-actions">
+        ${actionBtn}
+        <button class="btn-note" onclick="openNote(${c.id})" title="Добавить заметку">💬</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+
+function startAction(callId, newStatus) {
+  pendingAction = { callId, newStatus };
+  // Для принятия вызова сразу открываем окно с заметкой, иначе подтверждаем без заметки
+  if (newStatus === 'accepted') {
+    openNote(callId);
+  } else {
+    confirmAction();
+  }
+}
+
+function openNote(callId) {
+  if (!pendingAction || pendingAction.callId !== callId) {
+    pendingAction = { callId, newStatus: null }; // просто заметка
+  }
+  document.getElementById('note-input').value = '';
+  document.getElementById('note-overlay').classList.add('show');
+}
+
+function closeNote() {
+  document.getElementById('note-overlay').classList.remove('show');
+  pendingAction = null;
+}
+
+async function confirmAction() {
+  if (!pendingAction) return;
+  const { callId, newStatus } = pendingAction;
+
+  // Если нет нового статуса — просто обновляем заметку через патч с текущим статусом
+  const call = allCalls.find(c => c.id === callId);
+  const statusToSend = newStatus || (call ? call.status : null);
+  if (!statusToSend) { closeNote(); return; }
+
+  const note = document.getElementById('note-input').value.trim();
+
+  closeNote();
+  document.getElementById('loading').classList.add('show');
+
+  try {
+    const body = { status: statusToSend };
+    if (note) body.dispatcher_note = note;
+
+    const r = await fetch(API + `/api/v1/emergency/${callId}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (r.status === 401) { logout(); return; }
+    const data = await r.json();
+
+    if (!r.ok) {
+      showToast(data.detail || 'Ошибка обновления', 'err');
+      return;
+    }
+
+    // Обновляем локально
+    const idx = allCalls.findIndex(c => c.id === callId);
+    if (idx !== -1) allCalls[idx] = { ...allCalls[idx], ...data };
+
+    renderCalls();
+    updateStats();
+    showToast(`Вызов #${callId} → ${STATUS_LABELS[data.status]}`, 'ok');
+  } catch(_) {
+    showToast('Нет связи с сервером', 'err');
+  } finally {
+    document.getElementById('loading').classList.remove('show');
+    pendingAction = null;
+  }
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = (type === 'ok' ? '✅ ' : '❌ ') + msg;
+  el.className = 'toast show ' + type;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// Обновляем «N мин. назад» каждую минуту
+setInterval(() => {
+  document.querySelectorAll('.time-ago[data-ts]').forEach(el => {
+    const ts = el.dataset.ts;
+    const urgent = el.classList.contains('urgent');
+    el.textContent = (urgent ? '⚠️ ' : '') + timeAgo(ts);
+  });
+}, 30000);
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async () => {
+  const saved = localStorage.getItem('disp_token');
+  if (!saved) return;
+  try {
+    const r = await fetch(API + '/api/v1/users/me', {
+      headers: { 'Authorization': 'Bearer ' + saved }
+    });
+    if (!r.ok) return;
+    const user = await r.json();
+    if (!['dispatcher','admin'].includes(user.role)) return;
+    token = saved;
+    currentUser = user;
+    enterDashboard();
+  } catch(_) {}
+})();
+</script>
+</body>
+</html>

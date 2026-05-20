@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medicopter — Демо</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1a6fbf;
+    --blue-light: #2e8de0;
+    --blue-pale: #e8f3fc;
+    --green: #1a8a4a;
+    --green-pale: #e6f7ee;
+    --red: #d63232;
+    --red-pale: #fdeaea;
+    --orange: #d46b08;
+    --orange-pale: #fff4e0;
+    --bg: #f0f4f8;
+    --panel: #ffffff;
+    --border: #d4e2ef;
+    --text: #1a2332;
+    --muted: #6b7c93;
+    --radius: 18px;
+    --shadow: 0 4px 20px rgba(26,111,191,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--blue);
+    color: white;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .topbar-logo {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 20px; font-weight: 900;
+  }
+
+  .topbar-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  /* LAYOUT */
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 24px 28px;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: calc(100vh - 54px);
+  }
+
+  .panel {
+    background: var(--panel);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-size: 16px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+
+  .icon-blue { background: var(--blue-pale); }
+  .icon-green { background: var(--green-pale); }
+
+  .panel-body {
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--muted);
+    margin-bottom: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .form-input, .form-select {
+    width: 100%;
+    padding: 13px 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    color: var(--text);
+    background: #f8fafc;
+    outline: none;
+    transition: border-color 0.18s, background 0.18s;
+  }
+
+  .form-input:focus, .form-select:focus {
+    border-color: var(--blue);
+    background: white;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .btn-register {
+    width: 100%;
+    padding: 15px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 900;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.18s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-register:hover { background: var(--blue-light); }
+  .btn-register:active { transform: scale(0.98); }
+  .btn-register:disabled { background: #aac4de; cursor: not-allowed; }
+
+  /* TOAST */
+  .toast {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    font-weight: 700;
+    font-size: 14px;
+    animation: fadeIn 0.3s ease;
+  }
+  .toast.show { display: flex; }
+  .toast.success { background: var(--green-pale); color: var(--green); }
+  .toast.error { background: var(--red-pale); color: var(--red); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .stat-blue .stat-num { color: var(--blue); }
+  .stat-green .stat-num { color: var(--green); }
+  .stat-orange .stat-num { color: var(--orange); }
+  .stat-red .stat-num { color: var(--red); }
+
+  /* USERS TABLE */
+  .users-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .users-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 12px 10px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .users-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f0f4f8;
+    font-size: 14px;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+
+  .user-row {
+    transition: background 0.15s;
+  }
+
+  .user-row:hover { background: #f8fafc; }
+
+  .user-row.new-row {
+    animation: highlight 2s ease forwards;
+  }
+
+  @keyframes highlight {
+    0% { background: #d4f0e2; }
+    100% { background: transparent; }
+  }
+
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-name { font-weight: 800; font-size: 14px; }
+  .user-sub { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+  .role-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .role-patient { background: var(--blue-pale); color: var(--blue); }
+  .role-doctor { background: var(--green-pale); color: var(--green); }
+  .role-dispatcher { background: var(--orange-pale); color: var(--orange); }
+  .role-admin { background: var(--red-pale); color: var(--red); }
+
+  .status-dot-active {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+
+  .time-ago {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; font-weight: 700; }
+
+  /* LIVE INDICATOR */
+  .live-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .live-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+  }
+
+  /* DEMO HINT */
+  .demo-hint {
+    background: linear-gradient(135deg, #1a6fbf15, #1a8a4a10);
+    border: 1.5px dashed var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .btn-clear {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+  @media (max-width: 900px) {
+    .demo-layout { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">🏥 Medicopter <span style="opacity:0.5;font-weight:400;font-size:15px;">/ Демо-версия</span></div>
+  <div class="topbar-badge">🎬 DEMO MODE</div>
+</div>
+
+<div class="demo-layout">
+
+  <!-- LEFT: Registration Form -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="panel-icon icon-blue">📱</div>
+        Приложение — Регистрация
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <div class="demo-hint">
+        💡 Заполните форму и нажмите «Зарегистрироваться» — пользователь сразу появится в таблице справа.
+      </div>
+
+      <div id="toast" class="toast"></div>
+
+      <div class="form-group">
+        <label class="form-label">Имя и фамилия</label>
+        <input id="f-name" class="form-input" type="text" placeholder="Айгуль Сатова">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Телефон</label>
+          <input id="f-phone" class="form-input" type="tel" placeholder="+7 700 123 45 67">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Пароль</label>
+          <input id="f-pass" class="form-input" type="password" placeholder="••••••">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Область / Район</label>
+          <input id="f-region" class="form-input" type="text" placeholder="Алматинская обл.">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Село / Посёлок</label>
+          <input id="f-village" class="form-input" type="text" placeholder="Каскелен">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Роль (для демо)</label>
+        <select id="f-role" class="form-select">
+          <option value="patient">🧑 Пациент</option>
+          <option value="doctor">👨‍⚕️ Врач</option>
+          <option value="dispatcher">📡 Диспетчер</option>
+          <option value="admin">🔑 Администратор</option>
+        </select>
+      </div>
+
+      <button class="btn-register" id="btn-reg" onclick="registerUser()">
+        <span>✅ Зарегистрироваться</span>
+      </button>
+
+      <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
+        <div style="font-size:12px; font-weight:800; color:var(--muted); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.06em;">Быстрое заполнение</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button onclick="fillDemo('patient')" style="padding:7px 14px; border:1.5px solid var(--border); border-radius:50px; font-size:12px; font-weight:800; cursor:pointer; background:white; font-family:'Nunito',sans-serif; color:var(--text);">🧑 Пациент</button>
+          <button onclick="fillDemo('doctor')" style="padding:7px 14px; border:1.5px solid var(--border); border-radius:50px; font-size:12px; font-weight:800; cursor:pointer; background:white; font-family:'Nunito',sans-serif; color:var(--text);">👨‍⚕️ Врач</button>
+          <button onclick="fillDemo('dispatcher')" style="padding:7px 14px; border:1.5px solid var(--border); border-radius:50px; font-size:12px; font-weight:800; cursor:pointer; background:white; font-family:'Nunito',sans-serif; color:var(--text);">📡 Диспетчер</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: Admin Dashboard -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="panel-icon icon-green">🛡️</div>
+        Админ-панель — Пользователи
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="live-label"><span class="live-dot"></span>LIVE</div>
+        <button class="btn-clear" onclick="clearAll()">🗑 Очистить</button>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card stat-blue">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-label">Всего</div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-num" id="stat-patient">0</div>
+          <div class="stat-label">Пациентов</div>
+        </div>
+        <div class="stat-card stat-orange">
+          <div class="stat-num" id="stat-doctor">0</div>
+          <div class="stat-label">Врачей</div>
+        </div>
+        <div class="stat-card stat-red">
+          <div class="stat-num" id="stat-other">0</div>
+          <div class="stat-label">Персонал</div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">👤</div>
+        <p>Пока нет пользователей.<br>Зарегистрируйте первого слева →</p>
+      </div>
+
+      <table class="users-table" id="users-table" style="display:none;">
+        <thead>
+          <tr>
+            <th>Пользователь</th>
+            <th>Телефон</th>
+            <th>Роль</th>
+            <th>Местность</th>
+            <th>Время</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const users = [];
+  const phones = new Set();
+
+  const avatarColors = ['#1a6fbf','#1a8a4a','#d46b08','#7b52ab','#c0392b','#16a085','#8e44ad','#2980b9'];
+  let colorIdx = 0;
+
+  const demoData = {
+    patient: { name: 'Айгуль Сатова', phone: '+77001234567', pass: 'pass123', region: 'Алматинская обл.', village: 'Каскелен', role: 'patient' },
+    doctor:  { name: 'Болат Ахметов', phone: '+77712345678', pass: 'doc456', region: 'Карагандинская обл.', village: 'Шахтинск', role: 'doctor' },
+    dispatcher: { name: 'Жанна Нурова', phone: '+77071112233', pass: 'disp789', region: 'Жамбылская обл.', village: 'Жанатас', role: 'dispatcher' },
+  };
+
+  function fillDemo(type) {
+    const d = demoData[type];
+    // Slightly randomize phone to allow multiple registrations
+    const randomSuffix = Math.floor(Math.random() * 9000) + 1000;
+    document.getElementById('f-name').value = d.name;
+    document.getElementById('f-phone').value = d.phone.slice(0, -4) + randomSuffix;
+    document.getElementById('f-pass').value = d.pass;
+    document.getElementById('f-region').value = d.region;
+    document.getElementById('f-village').value = d.village;
+    document.getElementById('f-role').value = d.role;
+  }
+
+  function showToast(msg, type) {
+    const el = document.getElementById('toast');
+    el.className = `toast show ${type}`;
+    el.innerHTML = (type === 'success' ? '✅ ' : '❌ ') + msg;
+    setTimeout(() => { el.className = 'toast'; }, 3500);
+  }
+
+  function timeAgo(date) {
+    const secs = Math.floor((Date.now() - date) / 1000);
+    if (secs < 5) return 'только что';
+    if (secs < 60) return `${secs} сек. назад`;
+    if (secs < 3600) return `${Math.floor(secs/60)} мин. назад`;
+    return `${Math.floor(secs/3600)} ч. назад`;
+  }
+
+  function getInitials(name) {
+    return name.trim().split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  }
+
+  const roleLabels = { patient: 'Пациент', doctor: 'Врач', dispatcher: 'Диспетчер', admin: 'Администратор' };
+  const roleBadge = { patient: 'role-patient', doctor: 'role-doctor', dispatcher: 'role-dispatcher', admin: 'role-admin' };
+
+  function normalizePhone(p) {
+    const d = p.replace(/\D/g,'');
+    if (d.length === 11 && (d[0]==='7'||d[0]==='8')) return '+7' + d.slice(1);
+    if (d.length === 10) return '+7' + d;
+    return null;
+  }
+
+  function registerUser() {
+    const name    = document.getElementById('f-name').value.trim();
+    const phone   = document.getElementById('f-phone').value.trim();
+    const pass    = document.getElementById('f-pass').value.trim();
+    const region  = document.getElementById('f-region').value.trim();
+    const village = document.getElementById('f-village').value.trim();
+    const role    = document.getElementById('f-role').value;
+
+    if (!name || name.length < 2) { showToast('Введите имя и фамилию', 'error'); return; }
+
+    const normPhone = normalizePhone(phone);
+    if (!normPhone) { showToast('Введите корректный номер телефона', 'error'); return; }
+    if (phones.has(normPhone)) { showToast('Этот номер телефона уже зарегистрирован', 'error'); return; }
+
+    if (!pass || pass.length < 4) { showToast('Пароль должен быть не менее 4 символов', 'error'); return; }
+
+    const user = {
+      id: users.length + 1,
+      name, phone: normPhone, region, village, role,
+      color: avatarColors[colorIdx++ % avatarColors.length],
+      createdAt: Date.now(),
+    };
+
+    phones.add(normPhone);
+    users.unshift(user);
+
+    updateStats();
+    renderTable(user.id);
+    showToast(`${name} успешно зарегистрирован(а)!`, 'success');
+
+    // Clear form
+    ['f-name','f-phone','f-pass','f-region','f-village'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-role').value = 'patient';
+  }
+
+  function updateStats() {
+    document.getElementById('stat-total').textContent = users.length;
+    document.getElementById('stat-patient').textContent = users.filter(u => u.role === 'patient').length;
+    document.getElementById('stat-doctor').textContent = users.filter(u => u.role === 'doctor').length;
+    document.getElementById('stat-other').textContent = users.filter(u => u.role === 'dispatcher' || u.role === 'admin').length;
+  }
+
+  function renderTable(newId) {
+    const tbody = document.getElementById('users-tbody');
+    const empty = document.getElementById('empty-state');
+    const table = document.getElementById('users-table');
+
+    if (users.length === 0) {
+      empty.style.display = 'block';
+      table.style.display = 'none';
+      return;
+    }
+
+    empty.style.display = 'none';
+    table.style.display = 'table';
+
+    tbody.innerHTML = users.map(u => `
+      <tr class="user-row ${u.id === newId ? 'new-row' : ''}">
+        <td>
+          <div class="user-cell">
+            <div class="avatar" style="background:${u.color}">${getInitials(u.name)}</div>
+            <div>
+              <div class="user-name">${u.name}</div>
+              <div class="user-sub">ID #${u.id}</div>
+            </div>
+          </div>
+        </td>
+        <td>${u.phone}</td>
+        <td><span class="role-badge ${roleBadge[u.role]}">${roleLabels[u.role]}</span></td>
+        <td>
+          <div style="font-size:13px; font-weight:700;">${u.village || '—'}</div>
+          <div class="user-sub">${u.region || '—'}</div>
+        </td>
+        <td>
+          <span class="status-dot-active"></span>
+          <span class="time-ago" data-ts="${u.createdAt}">${timeAgo(u.createdAt)}</span>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function clearAll() {
+    if (users.length === 0) return;
+    if (!confirm('Очистить всех пользователей?')) return;
+    users.length = 0;
+    phones.clear();
+    colorIdx = 0;
+    updateStats();
+    renderTable(null);
+  }
+
+  // Update "time ago" every 10 seconds
+  setInterval(() => {
+    document.querySelectorAll('.time-ago').forEach(el => {
+      const ts = parseInt(el.dataset.ts);
+      if (ts) el.textContent = timeAgo(ts);
+    });
+  }, 10000);
+</script>
+</body>
+</html>
